@@ -1,6 +1,9 @@
 import os
 import smtplib
 import tempfile
+
+raise Exception("TESTE MONITOR V2")
+
 from datetime import datetime
 from email.mime.text import MIMEText
 
