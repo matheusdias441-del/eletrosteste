@@ -49,6 +49,8 @@ def buscar_preco(produto):
 
     try:
 
+        print(f"Consultando Google Shopping: {produto}")
+
         params = {
             "engine": "google_shopping",
             "q": produto,
@@ -61,6 +63,8 @@ def buscar_preco(produto):
         results = search.get_dict()
 
         shopping_results = results.get("shopping_results", [])
+
+        print(f"Resultados encontrados: {len(shopping_results)}")
 
         if not shopping_results:
             return ("Não encontrado", 0, "")
@@ -95,6 +99,10 @@ def buscar_preco(produto):
         loja = melhor_item.get("source", "Desconhecida")
         link = melhor_item.get("link", "")
 
+        print(
+            f"Menor preço encontrado: R$ {menor_preco} - {loja}"
+        )
+
         return (
             loja,
             menor_preco,
@@ -103,7 +111,8 @@ def buscar_preco(produto):
 
     except Exception as e:
 
-        print(f"Erro ao buscar {produto}: {e}")
+        print(f"ERRO AO CONSULTAR SERPAPI ({produto})")
+        print(str(e))
 
         return (
             "Erro",
@@ -172,9 +181,27 @@ def obter_ou_criar_aba(planilha, nome, linhas, colunas):
 
 def main():
 
+    print("================================")
+    print("INICIANDO MONITOR DE PREÇOS")
+    print("================================")
+
+    print(
+        "SERPAPI_KEY disponível:",
+        "SERPAPI_KEY" in os.environ
+    )
+
+    print(
+        "GOOGLE_CREDENTIALS disponível:",
+        "GOOGLE_CREDENTIALS" in os.environ
+    )
+
     gc = conectar_google()
 
+    print("Google autenticado com sucesso")
+
     planilha = gc.open(PLANILHA)
+
+    print(f"Planilha aberta: {PLANILHA}")
 
     historico = obter_ou_criar_aba(
         planilha,
@@ -226,11 +253,15 @@ def main():
 
     for produto in PRODUTOS:
 
-        print(f"Pesquisando {produto}...")
+        print("")
+        print("====================")
+        print(f"PRODUTO: {produto}")
+        print("====================")
 
         loja, preco, link = buscar_preco(produto)
 
         if preco <= 0:
+            print("Preço inválido. Ignorando.")
             continue
 
         historico.append_row(
@@ -255,7 +286,7 @@ def main():
             )
 
             print(
-                f"Primeiro registro: {produto} - R$ {preco}"
+                f"Primeiro registro salvo: {produto}"
             )
 
         else:
@@ -289,14 +320,17 @@ def main():
                 )
 
                 print(
-                    f"Novo menor preço: {produto} - R$ {preco}"
+                    f"NOVO MENOR PREÇO: {produto}"
                 )
 
             else:
 
                 print(
-                    f"Sem novo menor preço: {produto}"
+                    f"Sem novo menor preço para {produto}"
                 )
+
+    print("")
+    print("PROCESSAMENTO FINALIZADO")
 
 
 if __name__ == "__main__":
